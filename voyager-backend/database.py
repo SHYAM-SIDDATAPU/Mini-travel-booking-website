@@ -1,19 +1,25 @@
 # ============================================================
 # database.py — MySQL Connection & Table Setup
 # ============================================================
-# This file handles:
-#   1. Connecting to MySQL
-#   2. Creating all tables on first run
-
 import mysql.connector
 from mysql.connector import Error
-from config import DB_CONFIG
+import os # Added to read Environment Variables
 
 # ── Get a fresh DB connection ─────────────────────────────
 def get_connection():
-    """Returns a MySQL connection using config.py settings."""
+    """Returns a MySQL connection using Environment Variables for Render/TiDB."""
     try:
-        conn = mysql.connector.connect(**DB_CONFIG)
+        # We read these directly from Render's Environment Variables
+        conn = mysql.connector.connect(
+            host=os.getenv('DB_HOST','gateway01.ap-southeast-1.prod.aws.tidbcloud.com'),
+            user=os.getenv('DB_USER','syKrtU8ssxbajhq.root'),
+            password=os.getenv('DB_PASSWORD','1P5MLsiNAsAEThMe'),
+            database=os.getenv('DB_NAME','test'),
+            port=int(os.getenv('DB_PORT', 4000)),
+            # TiDB Serverless requires SSL
+            ssl_verify_cert=True,
+            ssl_ca=None 
+        )
         return conn
     except Error as e:
         print(f"[DB ERROR] Cannot connect to MySQL: {e}")
@@ -36,7 +42,7 @@ def init_db():
             id         INT AUTO_INCREMENT PRIMARY KEY,
             name       VARCHAR(100)        NOT NULL,
             email      VARCHAR(150) UNIQUE NOT NULL,
-            password   VARCHAR(255)        NOT NULL,   -- bcrypt hash
+            password   VARCHAR(255)        NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
@@ -59,14 +65,12 @@ def init_db():
     """)
 
     # ── bookings ──────────────────────────────────────────
-    # type: 'flight' | 'hotel' | 'package'
-    # details: JSON string with booking specifics
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS bookings (
             id          INT AUTO_INCREMENT PRIMARY KEY,
             user_id     INT            NOT NULL,
             type        VARCHAR(20)    NOT NULL,
-            details     TEXT           NOT NULL,   -- JSON string
+            details     TEXT           NOT NULL,
             price       DECIMAL(10,2)  NOT NULL,
             status      VARCHAR(20)    DEFAULT 'confirmed',
             created_at  TIMESTAMP      DEFAULT CURRENT_TIMESTAMP,

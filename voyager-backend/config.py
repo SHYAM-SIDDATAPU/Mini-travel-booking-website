@@ -1,19 +1,22 @@
 # ============================================================
 # config.py — All Configuration Settings
 # ============================================================
-# Edit the DB_CONFIG block to match your MySQL setup.
-# In a real project, load these from environment variables.
+import os
 
 # ── MySQL connection settings ─────────────────────────────
+# Note: We keep this dictionary for local fallback, 
+# but database.py is now looking at os.getenv first.
 DB_CONFIG = {
-    'host':     'localhost',
-    'user':     'root',          # ← your MySQL username
-    'password': 'root123888', # ← your MySQL password
-    'database': 'voyager_db',    # ← will be auto-created by setup_db.py
+    'host':     os.getenv('DB_HOST', 'localhost'),
+    'user':     os.getenv('DB_USER', 'root'),
+    'password': os.getenv('DB_PASSWORD', 'root123888'),
+    'database': os.getenv('DB_NAME', 'voyager_db'),
+    'port':     int(os.getenv('DB_PORT', 4000)),
     'autocommit': False,
     'charset': 'utf8mb4'
 }
 
 # ── JWT settings ──────────────────────────────────────────
-JWT_SECRET     = 'voyager_jwt_secret_change_me'
-JWT_EXPIRY_HRS = 24   # Token expires after 24 hours
+# This pulls from the JWT_SECRET_KEY you added in Render's Env Variables
+JWT_SECRET     = os.getenv('JWT_SECRET_KEY', 'voyager_jwt_secret_change_me')
+JWT_EXPIRY_HRS = 24
