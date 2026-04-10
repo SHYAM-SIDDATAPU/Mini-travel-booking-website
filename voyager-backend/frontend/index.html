@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Voyage — Luxury Travel Booking</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+  <style>
+    /* ── IMAGE HELPERS (additive only — no existing rules touched) ── */
+    .dest-img-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+    .dest-card:hover .dest-img-photo { transform: scale(1.07); }
+
+    .hotel-img-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.5s ease;
+    }
+    .hotel-card:hover .hotel-img-photo { transform: scale(1.05); }
+
+    .package-img-photo {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.6s ease;
+    }
+    .package-card:hover .package-img-photo { transform: scale(1.06); }
+
+    /* overlay keeps text readable over photos */
+    .dest-img,
+    .hotel-img,
+    .package-header {
+      overflow: hidden;
+      position: relative;
+    }
+    .dest-img-overlay,
+    .hotel-img-overlay,
+    .package-img-overlay {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.55) 0%, rgba(0,0,0,.10) 60%);
+      pointer-events: none;
+    }
+    /* keep emoji/badge on top */
+    .dest-emoji,
+    .dest-badge,
+    .hotel-emoji,
+    .hotel-rating,
+    .package-icon,
+    .package-tag,
+    .featured-tag {
+      position: relative;
+      z-index: 2;
+    }
+    /* hotel-img-large in modal */
+    .hotel-img-large {
+      overflow: hidden;
+      position: relative;
+    }
+    .hotel-img-large .hotel-img-photo {
+      border-radius: inherit;
+    }
+    /* fallback colour still shows if image 404s */
+    img.dest-img-photo,
+    img.hotel-img-photo,
+    img.package-img-photo {
+      background: #1a2035;
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="navbar">
+  <div class="nav-inner">
+    <div class="logo">✦ Voy<em>age</em></div>
+    <ul class="nav-links">
+      <li><a href="#flights">Flights</a></li>
+      <li><a href="#hotels">Hotels</a></li>
+      <li><a href="#packages">Packages</a></li>
+      <li><a href="#destinations">Destinations</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn-ghost" onclick="openModal('loginModal')">Sign In</button>
+      <button class="btn-primary" onclick="openModal('loginModal')">Join Free</button>
+    </div>
+    <button class="hamburger" id="hamburger" onclick="toggleMenu()">&#9776;</button>
+  </div>
+  <div class="mobile-menu" id="mobileMenu">
+    <a href="#flights">Flights</a>
+    <a href="#hotels">Hotels</a>
+    <a href="#packages">Packages</a>
+    <a href="#destinations">Destinations</a>
+    <a href="#" onclick="openModal('loginModal')">Sign In / Join</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero" id="hero">
+  <div class="hero-bg">
+    <div class="hero-overlay"></div>
+    <div class="orb orb1"></div>
+    <div class="orb orb2"></div>
+  </div>
+  <div class="hero-content">
+    <p class="hero-eyebrow">✦ Curated Journeys</p>
+    <h1 class="hero-title">Where Will Your<br/><em>Story Begin?</em></h1>
+    <p class="hero-sub">Discover the world's most breathtaking destinations with handpicked flights, hotels, and experiences.</p>
+  </div>
+
+  <!-- SEARCH BOX -->
+  <div class="search-box" id="search-box">
+    <div class="search-tabs">
+      <button class="tab active" onclick="switchTab(this,'flights')">✈ Flights</button>
+      <button class="tab" onclick="switchTab(this,'hotels')">🏨 Hotels</button>
+      <button class="tab" onclick="switchTab(this,'packages')">🌍 Packages</button>
+    </div>
+
+    <!-- FLIGHTS FORM -->
+    <div class="tab-content active" id="tab-flights">
+      <div class="trip-type">
+        <label><input type="radio" name="trip" value="roundtrip" checked/> Round Trip</label>
+        <label><input type="radio" name="trip" value="oneway"/> One Way</label>
+        <label><input type="radio" name="trip" value="multicity"/> Multi-City</label>
+      </div>
+      <div class="form-row">
+        <div class="field">
+          <label>From</label>
+          <input type="text" placeholder="City or Airport" id="fromField" value="Hyderabad (HYD)"/>
+        </div>
+        <button class="swap-btn" onclick="swapLocations()">⇄</button>
+        <div class="field">
+          <label>To</label>
+          <input type="text" placeholder="City or Airport" id="toField"/>
+        </div>
+        <div class="field date-field">
+          <label>Depart</label>
+          <input type="date" id="departDate"/>
+        </div>
+        <div class="field date-field" id="returnDateWrap">
+          <label>Return</label>
+          <input type="date" id="returnDate"/>
+        </div>
+        <div class="field narrow-field">
+          <label>Passengers</label>
+          <select>
+            <option>1 Adult</option>
+            <option>2 Adults</option>
+            <option>2 Adults, 1 Child</option>
+            <option>2 Adults, 2 Children</option>
+          </select>
+        </div>
+        <div class="field narrow-field">
+          <label>Class</label>
+          <select>
+            <option>Economy</option>
+            <option>Premium Economy</option>
+            <option>Business</option>
+            <option>First Class</option>
+          </select>
+        </div>
+      </div>
+      <div class="search-actions">
+        <button class="search-btn" onclick="searchFlights()">Search Flights →</button>
+      </div>
+    </div>
+
+    <!-- HOTELS FORM -->
+    <div class="tab-content" id="tab-hotels">
+      <div class="form-row">
+        <div class="field wide-field">
+          <label>Destination</label>
+          <input type="text" placeholder="City, Hotel or Area"/>
+        </div>
+        <div class="field date-field">
+          <label>Check-in</label>
+          <input type="date" id="checkin"/>
+        </div>
+        <div class="field date-field">
+          <label>Check-out</label>
+          <input type="date" id="checkout"/>
+        </div>
+        <div class="field narrow-field">
+          <label>Rooms</label>
+          <select>
+            <option>1 Room</option>
+            <option>2 Rooms</option>
+            <option>3 Rooms</option>
+          </select>
+        </div>
+        <div class="field narrow-field">
+          <label>Guests</label>
+          <select>
+            <option>2 Guests</option>
+            <option>3 Guests</option>
+            <option>4 Guests</option>
+          </select>
+        </div>
+      </div>
+      <div class="search-actions">
+        <button class="search-btn" onclick="searchHotels()">Search Hotels →</button>
+      </div>
+    </div>
+
+    <!-- PACKAGES FORM -->
+    <div class="tab-content" id="tab-packages">
+      <div class="form-row">
+        <div class="field">
+          <label>Flying From</label>
+          <input type="text" placeholder="Departure City"/>
+        </div>
+        <div class="field">
+          <label>Destination</label>
+          <input type="text" placeholder="Where to?"/>
+        </div>
+        <div class="field date-field">
+          <label>Departure</label>
+          <input type="date"/>
+        </div>
+        <div class="field narrow-field">
+          <label>Duration</label>
+          <select>
+            <option>3–5 nights</option>
+            <option>6–8 nights</option>
+            <option>9–12 nights</option>
+            <option>13+ nights</option>
+          </select>
+        </div>
+        <div class="field narrow-field">
+          <label>Travellers</label>
+          <select>
+            <option>2 Adults</option>
+            <option>3 Adults</option>
+            <option>Family (4)</option>
+          </select>
+        </div>
+      </div>
+      <div class="search-actions">
+        <button class="search-btn" onclick="searchPackages()">Find Packages →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SEARCH RESULTS PANEL -->
+<section class="results-panel" id="resultsPanel" style="display:none;">
+  <div class="container">
+    <div class="results-header">
+      <h2 id="resultsTitle">Search Results</h2>
+      <button class="close-results" onclick="closeResults()">✕ Close</button>
+    </div>
+    <div class="results-filters">
+      <select onchange="sortResults(this.value)">
+        <option value="price">Sort by: Price</option>
+        <option value="duration">Sort by: Duration</option>
+        <option value="rating">Sort by: Rating</option>
+      </select>
+      <label><input type="checkbox" onchange="filterDirect(this)"/> Direct flights only</label>
+    </div>
+    <div class="results-grid" id="resultsGrid"></div>
+  </div>
+</section>
+
+<!-- STATS -->
+<section class="stats-bar">
+  <div class="stat"><span class="stat-num" data-target="2000000">0</span><span class="stat-label">Happy Travellers</span></div>
+  <div class="stat"><span class="stat-num" data-target="185">0</span><span class="stat-label">Countries Covered</span></div>
+  <div class="stat"><span class="stat-num" data-target="500">0</span><span class="stat-label">Airlines Partnered</span></div>
+  <div class="stat"><span class="stat-num" data-target="98">0</span><span class="stat-label">% Satisfaction Rate</span></div>
+</section>
+
+<!-- FEATURED DESTINATIONS -->
+<section class="section" id="destinations">
+  <div class="container">
+    <div class="section-header">
+      <p class="eyebrow">✦ Popular Right Now</p>
+      <h2>Dream <em>Destinations</em></h2>
+    </div>
+    <div class="destinations-grid">
+
+      <!-- Maldives — large card -->
+      <div class="dest-card large" onclick="quickBook('Maldives')">
+        <div class="dest-img" style="background:#0093E9;">
+          <img class="dest-img-photo"
+               src="https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=900&q=80&auto=format&fit=crop"
+               alt="Maldives overwater bungalows"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="dest-img-overlay"></div>
+          <span class="dest-emoji">🏝</span>
+        </div>
+        <div class="dest-info">
+          <h3>Maldives</h3>
+          <p>Indian Ocean</p>
+          <span class="dest-price">From ₹89,000</span>
+        </div>
+        <div class="dest-badge">Trending</div>
+      </div>
+
+      <!-- Santorini -->
+      <div class="dest-card" onclick="quickBook('Santorini')">
+        <div class="dest-img" style="background:#667eea;">
+          <img class="dest-img-photo"
+               src="https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=700&q=80&auto=format&fit=crop"
+               alt="Santorini white domes and blue sea"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="dest-img-overlay"></div>
+          <span class="dest-emoji">🏛</span>
+        </div>
+        <div class="dest-info">
+          <h3>Santorini</h3>
+          <p>Greece</p>
+          <span class="dest-price">From ₹1,20,000</span>
+        </div>
+      </div>
+
+      <!-- Bali -->
+      <div class="dest-card" onclick="quickBook('Bali')">
+        <div class="dest-img" style="background:#11998e;">
+          <img class="dest-img-photo"
+               src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=700&q=80&auto=format&fit=crop"
+               alt="Bali rice terraces"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="dest-img-overlay"></div>
+          <span class="dest-emoji">🌴</span>
+        </div>
+        <div class="dest-info">
+          <h3>Bali</h3>
+          <p>Indonesia</p>
+          <span class="dest-price">From ₹45,000</span>
+        </div>
+        <div class="dest-badge">Best Value</div>
+      </div>
+
+      <!-- Tokyo -->
+      <div class="dest-card" onclick="quickBook('Tokyo')">
+        <div class="dest-img" style="background:#f7971e;">
+          <img class="dest-img-photo"
+               src="https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=700&q=80&auto=format&fit=crop"
+               alt="Tokyo city lights at night"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="dest-img-overlay"></div>
+          <span class="dest-emoji">🗼</span>
+        </div>
+        <div class="dest-info">
+          <h3>Tokyo</h3>
+          <p>Japan</p>
+          <span class="dest-price">From ₹75,000</span>
+        </div>
+      </div>
+
+      <!-- Paris -->
+      <div class="dest-card" onclick="quickBook('Paris')">
+        <div class="dest-img" style="background:#ee9ca7;">
+          <img class="dest-img-photo"
+               src="https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=700&q=80&auto=format&fit=crop"
+               alt="Eiffel Tower Paris"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="dest-img-overlay"></div>
+          <span class="dest-emoji">🗼</span>
+        </div>
+        <div class="dest-info">
+          <h3>Paris</h3>
+          <p>France</p>
+          <span class="dest-price">From ₹1,10,000</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FEATURED HOTELS -->
+<section class="section dark-section" id="hotels">
+  <div class="container">
+    <div class="section-header">
+      <p class="eyebrow">✦ Curated Stays</p>
+      <h2>Exceptional <em>Hotels</em></h2>
+    </div>
+    <div class="hotels-grid">
+
+      <!-- The Grand Oberoi -->
+      <div class="hotel-card" onclick="openModal('hotelModal')">
+        <div class="hotel-img" style="background:#1a1a2e;">
+          <img class="hotel-img-photo"
+               src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=800&q=80&auto=format&fit=crop"
+               alt="The Grand Oberoi Mumbai luxury hotel pool"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="hotel-img-overlay"></div>
+          <span class="hotel-emoji">🏰</span>
+          <div class="hotel-rating">⭐ 4.9</div>
+        </div>
+        <div class="hotel-info">
+          <div class="hotel-category">5-Star Resort</div>
+          <h3>The Grand Oberoi</h3>
+          <p>📍 Mumbai, India</p>
+          <div class="hotel-footer">
+            <span class="hotel-price">₹18,500 <small>/night</small></span>
+            <button class="btn-outline">Book Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ayana Resort Bali -->
+      <div class="hotel-card" onclick="openModal('hotelModal')">
+        <div class="hotel-img" style="background:#2d6a4f;">
+          <img class="hotel-img-photo"
+               src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&q=80&auto=format&fit=crop"
+               alt="Ayana Resort Bali infinity pool overlooking ocean"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="hotel-img-overlay"></div>
+          <span class="hotel-emoji">🌿</span>
+          <div class="hotel-rating">⭐ 4.8</div>
+        </div>
+        <div class="hotel-info">
+          <div class="hotel-category">Eco-Luxury Villa</div>
+          <h3>Ayana Resort</h3>
+          <p>📍 Bali, Indonesia</p>
+          <div class="hotel-footer">
+            <span class="hotel-price">₹22,000 <small>/night</small></span>
+            <button class="btn-outline">Book Now</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sakura Palace Kyoto -->
+      <div class="hotel-card" onclick="openModal('hotelModal')">
+        <div class="hotel-img" style="background:#c9184a;">
+          <img class="hotel-img-photo"
+               src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?w=800&q=80&auto=format&fit=crop"
+               alt="Kyoto traditional Japanese temple with cherry blossoms"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="hotel-img-overlay"></div>
+          <span class="hotel-emoji">🌸</span>
+          <div class="hotel-rating">⭐ 4.7</div>
+        </div>
+        <div class="hotel-info">
+          <div class="hotel-category">Boutique Hotel</div>
+          <h3>Sakura Palace</h3>
+          <p>📍 Kyoto, Japan</p>
+          <div class="hotel-footer">
+            <span class="hotel-price">₹15,200 <small>/night</small></span>
+            <button class="btn-outline">Book Now</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- PACKAGES -->
+<section class="section" id="packages">
+  <div class="container">
+    <div class="section-header">
+      <p class="eyebrow">✦ All-Inclusive</p>
+      <h2>Holiday <em>Packages</em></h2>
+    </div>
+    <div class="packages-grid">
+
+      <!-- Maldives Bliss -->
+      <div class="package-card" onclick="openModal('packageModal')">
+        <div class="package-header" style="background:#0093E9;">
+          <img class="package-img-photo"
+               src="https://images.unsplash.com/photo-1483683804023-6ccdb62f86ef?w=800&q=80&auto=format&fit=crop"
+               alt="Maldives overwater villa turquoise lagoon"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="package-img-overlay"></div>
+          <span class="package-icon">🏝</span>
+          <div class="package-tag">7 Days</div>
+        </div>
+        <div class="package-body">
+          <h3>Maldives Bliss</h3>
+          <ul>
+            <li>✈ Return Flights from HYD</li>
+            <li>🏨 5-Star Overwater Villa</li>
+            <li>🍽 All Meals Included</li>
+            <li>🤿 Snorkeling & Diving</li>
+          </ul>
+          <div class="package-price">
+            <span class="old-price">₹1,40,000</span>
+            <span class="new-price">₹99,000</span>
+            <span class="per">per person</span>
+          </div>
+          <button class="btn-primary full-width">Book Package</button>
+        </div>
+      </div>
+
+      <!-- Europe Explorer — Best Seller -->
+      <div class="package-card featured-package" onclick="openModal('packageModal')">
+        <div class="package-header" style="background:#667eea;">
+          <img class="package-img-photo"
+               src="https://images.unsplash.com/photo-1467269204594-9661b134dd2b?w=800&q=80&auto=format&fit=crop"
+               alt="European city canal at golden hour"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="package-img-overlay"></div>
+          <span class="package-icon">🌍</span>
+          <div class="package-tag">10 Days</div>
+          <div class="featured-tag">Best Seller</div>
+        </div>
+        <div class="package-body">
+          <h3>Europe Explorer</h3>
+          <ul>
+            <li>✈ Return Flights</li>
+            <li>🏨 4-Star Hotels (9 nights)</li>
+            <li>🚌 City-to-City Transfers</li>
+            <li>🗺 Guided Tours in 4 Cities</li>
+          </ul>
+          <div class="package-price">
+            <span class="old-price">₹2,50,000</span>
+            <span class="new-price">₹1,89,000</span>
+            <span class="per">per person</span>
+          </div>
+          <button class="btn-primary full-width">Book Package</button>
+        </div>
+      </div>
+
+      <!-- Japan Serenity -->
+      <div class="package-card" onclick="openModal('packageModal')">
+        <div class="package-header" style="background:#f7971e;">
+          <img class="package-img-photo"
+               src="https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=800&q=80&auto=format&fit=crop"
+               alt="Mount Fuji Japan cherry blossoms"
+               loading="lazy"
+               onerror="this.style.display='none'"/>
+          <div class="package-img-overlay"></div>
+          <span class="package-icon">🏯</span>
+          <div class="package-tag">6 Days</div>
+        </div>
+        <div class="package-body">
+          <h3>Japan Serenity</h3>
+          <ul>
+            <li>✈ Return Flights</li>
+            <li>🏨 Ryokan + City Hotel</li>
+            <li>🍱 Breakfast Included</li>
+            <li>🚅 JR Rail Pass</li>
+          </ul>
+          <div class="package-price">
+            <span class="old-price">₹1,60,000</span>
+            <span class="new-price">₹1,25,000</span>
+            <span class="per">per person</span>
+          </div>
+          <button class="btn-primary full-width">Book Package</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES / WHY US -->
+<section class="section features-section">
+  <div class="container">
+    <div class="section-header">
+      <p class="eyebrow">✦ Why Voyage</p>
+      <h2>Travel <em>Redefined</em></h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🔒</div>
+        <h3>Secure Payments</h3>
+        <p>256-bit SSL encryption on all transactions. Your money is always safe with us.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💰</div>
+        <h3>Best Price Guarantee</h3>
+        <p>Found it cheaper elsewhere? We'll match the price and give you extra cashback.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🕐</div>
+        <h3>24/7 Support</h3>
+        <p>Our travel experts are always on call — before, during, and after your journey.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Free Cancellation</h3>
+        <p>Plans change. Cancel for free up to 48 hours before departure on most bookings.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NEWSLETTER -->
+<section class="newsletter-section">
+  <div class="container">
+    <div class="newsletter-inner">
+      <div class="newsletter-text">
+        <h2>Get Exclusive <em>Deals</em></h2>
+        <p>Join 2 million travellers receiving flash sales, secret deals & travel inspiration.</p>
+      </div>
+      <div class="newsletter-form">
+        <input type="email" placeholder="Your email address" id="newsletterEmail"/>
+        <button class="btn-primary" onclick="subscribeNewsletter()">Subscribe ✦</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">✦ Voy<em>age</em></div>
+        <p>Crafting unforgettable journeys since 2010. Trusted by millions worldwide.</p>
+        <div class="social-links">
+          <a href="#">𝕏</a>
+          <a href="#">in</a>
+          <a href="#">f</a>
+          <a href="#">▶</a>
+        </div>
+      </div>
+      <div class="footer-col">
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="#">Flights</a></li>
+          <li><a href="#">Hotels</a></li>
+          <li><a href="#">Holiday Packages</a></li>
+          <li><a href="#">Car Rentals</a></li>
+          <li><a href="#">Travel Insurance</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <ul>
+          <li><a href="#">About Us</a></li>
+          <li><a href="#">Careers</a></li>
+          <li><a href="#">Press</a></li>
+          <li><a href="#">Partner With Us</a></li>
+          <li><a href="#">Blog</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <ul>
+          <li><a href="#">Help Center</a></li>
+          <li><a href="#">My Bookings</a></li>
+          <li><a href="#">Refunds</a></li>
+          <li><a href="#">Privacy Policy</a></li>
+          <li><a href="#">Terms of Service</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Voyage Travel. All rights reserved.</p>
+      <div class="payment-icons">
+        <span>💳 Visa</span>
+        <span>💳 Mastercard</span>
+        <span>💰 UPI</span>
+        <span>📱 GPay</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="loginModal" onclick="closeModalOnBg(event, 'loginModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="switchModalTab(this,'login')">Sign In</button>
+      <button class="modal-tab" onclick="switchModalTab(this,'register')">Join Free</button>
+    </div>
+    <div id="modal-login">
+      <div class="form-group"><label>Email</label><input type="email" placeholder="you@email.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="••••••••"/></div>
+      <button class="btn-primary full-width" onclick="doLogin()">Sign In</button>
+      <p class="modal-alt">Forgot password? <a href="#">Reset</a></p>
+      <div class="divider">or continue with</div>
+      <div class="social-auth">
+        <button class="social-btn">G Google</button>
+        <button class="social-btn">f Facebook</button>
+      </div>
+    </div>
+    <div id="modal-register" style="display:none">
+      <div class="form-group"><label>Full Name</label><input type="text" placeholder="Your name"/></div>
+      <div class="form-group"><label>Email</label><input type="email" placeholder="you@email.com"/></div>
+      <div class="form-group"><label>Password</label><input type="password" placeholder="Create a password"/></div>
+      <button class="btn-primary full-width" onclick="doRegister()">Create Account</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="hotelModal" onclick="closeModalOnBg(event,'hotelModal')">
+  <div class="modal wide-modal">
+    <button class="modal-close" onclick="closeModal('hotelModal')">✕</button>
+    <h2>Book Your Stay</h2>
+    <div class="hotel-booking-grid">
+      <div class="hotel-booking-info">
+        <div class="hotel-img-large" style="background:#1a1a2e;border-radius:12px;overflow:hidden;height:200px;">
+          <img class="hotel-img-photo"
+               src="https://images.unsplash.com/photo-1566073771259-6a8506099945?w=700&q=80&auto=format&fit=crop"
+               alt="The Grand Oberoi hotel lobby"
+               loading="lazy"
+               style="width:100%;height:100%;object-fit:cover;"
+               onerror="this.style.display='none'"/>
+        </div>
+        <h3>The Grand Oberoi</h3>
+        <p>📍 Nariman Point, Mumbai</p>
+        <div class="amenities">
+          <span>🏊 Pool</span><span>🏋 Gym</span><span>🍽 Restaurant</span><span>🧖 Spa</span><span>📶 Free WiFi</span>
+        </div>
+      </div>
+      <div class="hotel-booking-form">
+        <div class="form-group"><label>Check-in</label><input type="date"/></div>
+        <div class="form-group"><label>Check-out</label><input type="date"/></div>
+        <div class="form-group"><label>Room Type</label>
+          <select>
+            <option>Deluxe Room — ₹18,500/night</option>
+            <option>Premier Suite — ₹32,000/night</option>
+            <option>Presidential Suite — ₹75,000/night</option>
+          </select>
+        </div>
+        <div class="form-group"><label>Guests</label><select><option>2</option><option>3</option><option>4</option></select></div>
+        <div class="price-summary">
+          <div class="price-row"><span>Room (3 nights)</span><span>₹55,500</span></div>
+          <div class="price-row"><span>Taxes & Fees</span><span>₹6,660</span></div>
+          <div class="price-row total"><span>Total</span><span>₹62,160</span></div>
+        </div>
+        <button class="btn-primary full-width" onclick="confirmBooking('hotel')">Confirm Booking</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="packageModal" onclick="closeModalOnBg(event,'packageModal')">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('packageModal')">✕</button>
+    <h2>Package Enquiry</h2>
+    <p style="color:var(--text-muted);margin-bottom:1.5rem">Our travel experts will reach out within 2 hours.</p>
+    <div class="form-group"><label>Full Name</label><input type="text" placeholder="Your name"/></div>
+    <div class="form-group"><label>Email</label><input type="email" placeholder="you@email.com"/></div>
+    <div class="form-group"><label>Phone</label><input type="tel" placeholder="+91 9876543210"/></div>
+    <div class="form-group"><label>Preferred Package</label>
+      <select>
+        <option>Maldives Bliss — ₹99,000</option>
+        <option>Europe Explorer — ₹1,89,000</option>
+        <option>Japan Serenity — ₹1,25,000</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Travel Date</label><input type="date"/></div>
+    <button class="btn-primary full-width" onclick="confirmBooking('package')">Request Callback</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

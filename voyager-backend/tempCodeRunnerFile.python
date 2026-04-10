@@ -1,0 +1,6 @@
+orginal_price = float(input("Enter Orginal price"))
+discount_percent = float(input("enter discount %"))
+discount_amount = discount_percent /100*orginal_price
+final_price = orginal_price-discount_amount
+print(f"final price after{discount_percent}%
+      discount:{final_price}")
