@@ -14,7 +14,7 @@
         in the flights table never affect past bookings
    ============================================================ */
 
-const API = 'http://localhost:5000/api';
+const API = 'https://mini-travel-booking-website.onrender.com/';
 
 /* ── SESSION ─────────────────────────────────────────────── */
 const Auth = {
