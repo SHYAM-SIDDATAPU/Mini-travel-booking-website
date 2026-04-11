@@ -6,6 +6,7 @@ from mysql.connector import Error
 import os # Added to read Environment Variables
 
 # ── Get a fresh DB connection ─────────────────────────────
+# ── Get a fresh DB connection ─────────────────────────────
 def get_connection():
     """Returns a MySQL connection using Environment Variables for Render/TiDB."""
     try:
@@ -16,9 +17,13 @@ def get_connection():
             password=os.getenv('DB_PASSWORD','1P5MLsiNAsAEThMe'),
             database=os.getenv('DB_NAME','test'),
             port=int(os.getenv('DB_PORT', 4000)),
-            # TiDB Serverless requires SSL
-            ssl_verify_cert=True,
-            ssl_ca=None 
+            
+            # ── FIX APPLIED HERE ──────────────────────────────────
+            # 1. Use the actual path to Render's system certificates
+            ssl_ca="/etc/ssl/certs/ca-certificates.crt", 
+            # 2. Ensure we verify we are talking to the real TiDB server
+            ssl_verify_identity=True 
+            # ──────────────────────────────────────────────────────
         )
         return conn
     except Error as e:

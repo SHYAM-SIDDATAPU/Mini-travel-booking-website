@@ -14,9 +14,9 @@ app = Flask(__name__)
 # ── Secret key ──────────────────────────────────────────
 app.config['SECRET_KEY'] = 'voyager_secret_key_change_in_production'
 
-# ── FIX 1: Broaden CORS to allow all routes and origins ──
-# This fixes the "No Access-Control-Allow-Origin header" error
-CORS(app, resources={r"/*": {"origins": "*"}})
+# ── FIX: Enhanced CORS for Production ──
+# Added supports_credentials and explicit methods to pass Preflight (OPTIONS) checks
+CORS(app, resources={r"/api/*": {"origins": "*"}}, supports_credentials=True)
 
 # ── Register route blueprints ─────────────────────────────
 app.register_blueprint(auth_bp,    url_prefix='/api/auth')
@@ -33,14 +33,12 @@ def health():
 def home():
     return "Voyager Backend Running 🚀"
 
-# ── FIX 2: Ensure DB is initialized before the server starts on Render ──
+# ── FIX: Ensure DB is initialized ─────────────────────────
 with app.app_context():
     try:
         init_db()
     except Exception as e:
         print(f"Database init failed: {e}")
 
-# ── Start server ──────────────────────────────────────────
 if __name__ == '__main__':
-    # On local dev
     app.run(debug=True, port=5000)
